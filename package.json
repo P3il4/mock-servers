@@ -1,0 +1,26 @@
+{
+  "name": "mock-api-servers",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/start-all.ts",
+    "start:gemini-image": "tsx src/gemini-image.ts",
+    "start:gemini-chat": "tsx src/gemini-chat.ts",
+    "start:openai-video": "tsx src/openai-video.ts",
+    "start:openai-image": "tsx src/openai-image.ts",
+    "start:together": "tsx src/together.ts",
+    "start:cloudflare-image": "tsx src/cloudflare-image.ts",
+    "start:cloudflare-text": "tsx src/cloudflare-text.ts",
+    "test": "tsx src/smoke-test.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
