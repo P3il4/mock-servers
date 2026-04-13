@@ -20,6 +20,7 @@ const servers = [
   { file: 'together.ts',         port: 18200, name: 'Together AI' },
   { file: 'cloudflare-image.ts', port: 18300, name: 'Cloudflare Image' },
   { file: 'cloudflare-text.ts',  port: 18350, name: 'Cloudflare Text' },
+  { file: 'replicate.ts',        port: 18400, name: 'Replicate' },
 ];
 
 const children: ChildProcess[] = [];

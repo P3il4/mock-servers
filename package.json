@@ -12,6 +12,7 @@
     "start:together": "tsx src/together.ts",
     "start:cloudflare-image": "tsx src/cloudflare-image.ts",
     "start:cloudflare-text": "tsx src/cloudflare-text.ts",
+    "start:replicate": "tsx src/replicate.ts",
     "test": "tsx src/smoke-test.ts"
   },
   "dependencies": {
