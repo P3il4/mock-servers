@@ -179,7 +179,8 @@ app.use(mockLogRouter(log));
 function isImageModel(model: string): boolean {
   const lower = model.toLowerCase();
   return lower.includes('sdxl') || lower.includes('flux') || lower.includes('stable-diffusion')
-    || lower.includes('dall') || lower.includes('imagen') || lower.includes('kandinsky');
+    || lower.includes('dall') || lower.includes('imagen') || lower.includes('kandinsky')
+    || lower.includes('lucid') || lower.includes('phoenix');
 }
 
 // ── Helper: build prediction response ──────────────────────────────

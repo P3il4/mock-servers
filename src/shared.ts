@@ -37,7 +37,7 @@ export class RequestLog {
     if (this.entries.length > this.max) this.entries.shift();
   }
 
-  query(filters?: { endpoint?: string; model?: string; last?: number }): LogEntry[] {
+  query(filters?: { endpoint?: string; model?: string; method?: string; last?: number }): LogEntry[] {
     let r = [...this.entries];
     if (filters?.endpoint) {
       const ep = filters.endpoint;
@@ -46,6 +46,10 @@ export class RequestLog {
     if (filters?.model) {
       const m = filters.model;
       r = r.filter(e => (e.model ?? '').includes(m));
+    }
+    if (filters?.method) {
+      const m = filters.method.toUpperCase();
+      r = r.filter(e => e.method === m);
     }
     if (filters?.last) r = r.slice(-filters.last);
     return r;
@@ -93,6 +97,7 @@ export function mockLogRouter(log: RequestLog): Router {
       log.query({
         endpoint: req.query.endpoint as string | undefined,
         model: req.query.model as string | undefined,
+        method: req.query.method as string | undefined,
         last: req.query.last ? parseInt(req.query.last as string) : undefined,
       }),
     );
