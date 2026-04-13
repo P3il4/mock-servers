@@ -70,6 +70,19 @@ export function sanitize(obj: unknown): unknown {
   return obj;
 }
 
+// ── CORS Middleware ──────────────────────────────────────────────────
+
+export function corsMiddleware(req: Request, res: Response, next: () => void): void {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Cors-Proxy-Auth-Secret');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+}
+
 // ── Mock Log Router ──────────────────────────────────────────────────
 
 export function mockLogRouter(log: RequestLog): Router {

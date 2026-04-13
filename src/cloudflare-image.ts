@@ -30,7 +30,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import {
   RequestLog, mockLogRouter, extractErrorTriggerCf, handleCloudflareError,
-  requireBearerAuth, cfError, logConsole, generatePng,
+  requireBearerAuth, cfError, logConsole, generatePng, corsMiddleware,
 } from './shared.js';
 
 const PORT = 18300;
@@ -103,6 +103,7 @@ function extractMultipartFields(buf: Buffer, boundary: string): Record<string, s
 // ── Express app ─────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

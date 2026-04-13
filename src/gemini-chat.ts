@@ -23,7 +23,7 @@ import express, { type Request, type Response } from 'express';
 import crypto from 'node:crypto';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger, handleGoogleError,
-  logConsole, GOOGLE_ERRORS,
+  logConsole, GOOGLE_ERRORS, corsMiddleware,
 } from './shared.js';
 
 /** Extract a single string from an Express query/param value. */
@@ -455,6 +455,7 @@ function buildConsoleParams(body: Record<string, unknown>): Record<string, unkno
 // ── Express App ─────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json({ limit: '50mb' }));
 
 const log = new RequestLog();

@@ -27,7 +27,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger, handleGoogleError,
-  logConsole, MOCK_PNG_B64, MOCK_MP4_B64,
+  logConsole, MOCK_PNG_B64, MOCK_MP4_B64, corsMiddleware,
 } from './shared.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -606,6 +606,7 @@ function openAIStream(
 // ── Express App ─────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json({ limit: '50mb' }));
 
 const log = new RequestLog();

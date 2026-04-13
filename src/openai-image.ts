@@ -20,7 +20,7 @@ import express, { type Request, type Response } from 'express';
 import crypto from 'node:crypto';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger, handleOpenAIError,
-  requireBearerAuth, logConsole, generatePng,
+  requireBearerAuth, logConsole, generatePng, corsMiddleware,
 } from './shared.js';
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -204,6 +204,7 @@ function parseMultipart(req: Request): Promise<MultipartResult> {
 // ── App ─────────────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use((req, _res, next) => {
   const ct = req.headers['content-type'] ?? '';
   if (ct.includes('multipart/form-data')) {

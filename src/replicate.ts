@@ -41,7 +41,7 @@ import express, { type Request, type Response } from 'express';
 import crypto from 'node:crypto';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger,
-  requireBearerAuth, logConsole, generatePng,
+  requireBearerAuth, logConsole, generatePng, corsMiddleware,
 } from './shared.js';
 
 const PORT = 18400;
@@ -168,6 +168,7 @@ function progressWorker(predictionId: string, totalMs: number, shouldFail: boole
 // ── Express app ────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json({ limit: '50mb' }));
 
 const log = new RequestLog();

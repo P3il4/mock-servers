@@ -20,7 +20,7 @@
 import express, { type Request, type Response } from 'express';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger, handleOpenAIError,
-  requireBearerAuth, logConsole, generatePng, generateMp4,
+  requireBearerAuth, logConsole, generatePng, generateMp4, corsMiddleware,
 } from './shared.js';
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -110,6 +110,7 @@ function randomHex(len: number): string {
 // ── App ─────────────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

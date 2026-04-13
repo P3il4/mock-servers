@@ -33,7 +33,7 @@ import express, { type Request, type Response } from 'express';
 import crypto from 'node:crypto';
 import {
   RequestLog, mockLogRouter, extractErrorTrigger, handleOpenAIError,
-  requireBearerAuth, logConsole, generatePng, generateMp4,
+  requireBearerAuth, logConsole, generatePng, generateMp4, corsMiddleware,
 } from './shared.js';
 
 const PORT = 18200;
@@ -112,6 +112,7 @@ function progressWorker(videoId: string, totalMs: number, shouldFail: boolean): 
 // ── Express app ─────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json());
 
 const log = new RequestLog();

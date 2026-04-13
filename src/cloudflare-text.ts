@@ -31,7 +31,7 @@
 import express, { type Request, type Response } from 'express';
 import {
   RequestLog, mockLogRouter, extractErrorTriggerCf, handleCloudflareError,
-  requireBearerAuth, cfError, logConsole,
+  requireBearerAuth, cfError, logConsole, corsMiddleware,
 } from './shared.js';
 
 const PORT = 18350;
@@ -105,6 +105,7 @@ function* streamResponse(text: string): Generator<string> {
 // ── Express app ─────────────────────────────────────────────────────
 
 const app = express();
+app.use(corsMiddleware);
 app.use(express.json());
 
 const log = new RequestLog();
