@@ -260,9 +260,11 @@ app.post('/v1/images/generations', (req: Request, res: Response): void => {
   const steps: number | undefined = data.steps;
   const seed: number | undefined = data.seed;
 
+  // Capture every field the SDK sent (so tests can assert on negative_prompt,
+  // prompt_strength, image_url, etc.) and keep the prompt truncated.
   const params: Record<string, unknown> = {
-    model, prompt: prompt.slice(0, 80), width, height,
-    n, response_format: responseFormat, steps, seed,
+    ...data,
+    prompt: prompt.slice(0, 80),
   };
 
   if (!queryTrigger) {
