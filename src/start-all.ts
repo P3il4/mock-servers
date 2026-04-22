@@ -21,6 +21,10 @@ const servers = [
   { file: 'cloudflare-image.ts', port: 18300, name: 'Cloudflare Image' },
   { file: 'cloudflare-text.ts',  port: 18350, name: 'Cloudflare Text' },
   { file: 'replicate.ts',        port: 18400, name: 'Replicate' },
+  { file: 'openai-chat.ts',      port: 18500, name: 'OpenAI Chat (generic)' },
+  { file: 'xai-video.ts',        port: 18600, name: 'xAI Video (Grok Imagine)' },
+  { file: 'xai-tts.ts',          port: 18650, name: 'xAI TTS (Grok TTS)' },
+  { file: 'xai-stt.ts',          port: 18700, name: 'xAI STT (Grok STT)' },
 ];
 
 const children: ChildProcess[] = [];

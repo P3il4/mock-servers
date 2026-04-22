@@ -29,11 +29,22 @@ const PORT = 18150;
 
 const VALID_MODELS = new Set([
   'dall-e-2', 'dall-e-3', 'gpt-image-1', 'gpt-image-1-mini', 'gpt-image-1.5',
+  'gpt-image-2', 'gpt-image-2-2026-04-21',
+  // xAI (Grok Imagine) — same /v1/images/generations endpoint, flat per-image pricing.
+  'grok-imagine-image', 'grok-imagine-image-pro',
 ]);
 
 const VALID_SIZES_DALLE2 = new Set(['256x256', '512x512', '1024x1024']);
 const VALID_SIZES_DALLE3 = new Set(['1024x1024', '1792x1024', '1024x1792']);
 const VALID_SIZES_GPT_IMAGE = new Set(['auto', '1024x1024', '1536x1024', '1024x1536']);
+const GROK_IMAGE_MODELS = new Set(['grok-imagine-image', 'grok-imagine-image-pro']);
+
+const GPT_IMAGE_2_MODELS = new Set(['gpt-image-2', 'gpt-image-2-2026-04-21']);
+// gpt-image-2 accepts arbitrary sizes subject to OpenAI's constraints.
+const GPT_IMAGE_2_SIZE = {
+  MIN_EDGE: 16, MAX_EDGE: 3840, STEP: 16,
+  MAX_RATIO: 3, MIN_PIXELS: 655_360, MAX_PIXELS: 8_294_400,
+};
 
 const VALID_QUALITY = new Set(['standard', 'hd', 'low', 'medium', 'high', 'auto']);
 const VALID_STYLES = new Set(['vivid', 'natural']);
@@ -107,9 +118,28 @@ function buildImageData(
   return images;
 }
 
-function buildUsage(n: number, prompt: string): Record<string, unknown> {
+// OpenAI's published gpt-image-2 output-token formula (matches their web calculator).
+function gptImage2OutputTokens(width: number, height: number, quality: string): number {
+  const FACTORS: Record<string, number> = { low: 16, medium: 48, high: 96, auto: 48 };
+  const factor = FACTORS[quality] ?? FACTORS.medium!;
+  const longEdge = Math.max(width, height);
+  const shortEdge = Math.min(width, height);
+  const shortLatent = Math.round(factor * shortEdge / longEdge);
+  const latentW = width >= height ? factor : shortLatent;
+  const latentH = width >= height ? shortLatent : factor;
+  return Math.ceil(latentW * latentH * (2_000_000 + width * height) / 4_000_000);
+}
+
+function buildUsage(n: number, prompt: string, model?: string, size?: string, quality?: string): Record<string, unknown> {
   const textTokens = Math.max(1, prompt.split(/\s+/).length);
-  const imageTokens = 1024 * n;
+  let imagePerCall = 1024;
+  if (model && GPT_IMAGE_2_MODELS.has(model) && size) {
+    const [w, h] = size.split('x').map(Number);
+    if (Number.isFinite(w) && Number.isFinite(h)) {
+      imagePerCall = gptImage2OutputTokens(w!, h!, quality ?? 'medium');
+    }
+  }
+  const imageTokens = imagePerCall * n;
   return {
     input_tokens: textTokens,
     input_tokens_details: { image_tokens: 0, text_tokens: textTokens },
@@ -294,10 +324,11 @@ app.post('/v1/images/generations', (req: Request, res: Response) => {
   if (size === undefined || size === null) {
     if (model === 'dall-e-2') size = '1024x1024';
     else if (model === 'dall-e-3') size = '1024x1024';
+    else if (GROK_IMAGE_MODELS.has(model)) size = '1024x1024';
     else size = 'auto';
   }
 
-  if (size === 'auto' && isGpt) {
+  if (size === 'auto' && (isGpt || GROK_IMAGE_MODELS.has(model))) {
     size = '1024x1024';
   }
 
@@ -317,7 +348,19 @@ app.post('/v1/images/generations', (req: Request, res: Response) => {
     return;
   }
 
-  if (isGpt && !VALID_SIZES_GPT_IMAGE.has(size) && size !== 'auto') {
+  if (GPT_IMAGE_2_MODELS.has(model)) {
+    const [w, h] = parseSize(size);
+    const err = (msg: string) => res.status(400).json({
+      error: { message: msg, type: 'invalid_request_error', code: 'invalid_parameter' },
+    });
+    if (!Number.isInteger(w) || !Number.isInteger(h) || w <= 0 || h <= 0) { err(`Invalid size '${size}' for ${model}.`); return; }
+    if (w % GPT_IMAGE_2_SIZE.STEP !== 0 || h % GPT_IMAGE_2_SIZE.STEP !== 0) { err(`Width and height must both be divisible by ${GPT_IMAGE_2_SIZE.STEP}.`); return; }
+    if (Math.max(w, h) > GPT_IMAGE_2_SIZE.MAX_EDGE) { err(`Maximum edge length must be less than or equal to ${GPT_IMAGE_2_SIZE.MAX_EDGE}px.`); return; }
+    if (Math.max(w, h) / Math.min(w, h) > GPT_IMAGE_2_SIZE.MAX_RATIO) { err(`Aspect ratio must be no greater than ${GPT_IMAGE_2_SIZE.MAX_RATIO}:1.`); return; }
+    const px = w * h;
+    if (px < GPT_IMAGE_2_SIZE.MIN_PIXELS) { err(`Pixel budget must be at least ${GPT_IMAGE_2_SIZE.MIN_PIXELS} pixels.`); return; }
+    if (px > GPT_IMAGE_2_SIZE.MAX_PIXELS) { err(`Pixel budget must be no greater than ${GPT_IMAGE_2_SIZE.MAX_PIXELS} pixels.`); return; }
+  } else if (isGpt && !VALID_SIZES_GPT_IMAGE.has(size) && size !== 'auto') {
     const valid = [...VALID_SIZES_GPT_IMAGE].filter(s => s !== 'auto').sort().join(', ');
     res.status(400).json({
       error: { message: `Invalid size '${size}' for ${model}. Must be one of: ${valid}.`, type: 'invalid_request_error', code: 'invalid_parameter' },
@@ -395,7 +438,7 @@ app.post('/v1/images/generations', (req: Request, res: Response) => {
     result.output_format = outputFormat ?? 'png';
     result.quality = mapQualityForResponse(quality);
     result.size = size;
-    result.usage = buildUsage(n, prompt);
+    result.usage = buildUsage(n, prompt, model, size, mapQualityForResponse(quality));
   }
 
   res.status(200).json(result);
